@@ -1,0 +1,287 @@
+#! /opt/homebrew/Cellar/icarus-verilog/12.0/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/va_math.vpi";
+S_0x11ee08ca0 .scope module, "InstructionRegisterSimulation" "InstructionRegisterSimulation" 2 8;
+ .timescale -9 -12;
+v0x11ee314e0_0 .var "I", 7 0;
+v0x11ee315a0_0 .net "IROut", 15 0, v0x11ee30e10_0;  1 drivers
+v0x11ee31650_0 .var "LH", 0 0;
+v0x11ee31720_0 .var "Write", 0 0;
+v0x11ee317d0_0 .var/i "test_no", 31 0;
+S_0x11ee06b70 .scope module, "F" "FileOperation" 2 18, 3 15 0, S_0x11ee08ca0;
+ .timescale -9 -12;
+v0x11ee30630_0 .var "SimulationName", 511 0;
+v0x11ee306f0_0 .var/i "df", 31 0;
+v0x11ee307a0_0 .var/i "ef", 31 0;
+v0x11ee30860_0 .var/i "fails", 31 0;
+v0x11ee30910_0 .var/i "success", 31 0;
+S_0x11ee06ce0 .scope task, "CheckValues" "CheckValues" 3 72, 3 72 0, S_0x11ee06b70;
+ .timescale -9 -12;
+v0x11ee08e10_0 .var "actual", 31 0;
+v0x11ee2fff0_0 .var "expected", 31 0;
+v0x11ee30090_0 .var "name", 255 0;
+v0x11ee30140_0 .var "testno", 31 0;
+TD_InstructionRegisterSimulation.F.CheckValues ;
+    %load/vec4 v0x11ee08e10_0;
+    %load/vec4 v0x11ee2fff0_0;
+    %cmp/e;
+    %jmp/0xz  T_0.0, 6;
+    %load/vec4 v0x11ee30910_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x11ee30910_0, 0, 32;
+    %vpi_call 3 79 "$fwrite", v0x11ee306f0_0, "[PASS] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h\012", v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+    %vpi_call 3 82 "$fwrite", v0x11ee307a0_0, "%0s;%0d;%0s;1;0x%h;0x%h\012", v0x11ee30630_0, v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+    %vpi_call 3 85 "$display", "[PASS] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h", v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x11ee30860_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x11ee30860_0, 0, 32;
+    %vpi_call 3 91 "$fwrite", v0x11ee306f0_0, "[FAIL] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h\012", v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+    %vpi_call 3 94 "$fwrite", v0x11ee307a0_0, "%0s;%0d;%0s;0;0x%h;0x%h\012", v0x11ee30630_0, v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+    %vpi_call 3 97 "$display", "[FAIL] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h", v0x11ee30140_0, v0x11ee30090_0, v0x11ee08e10_0, v0x11ee2fff0_0 {0 0 0};
+T_0.1 ;
+    %end;
+S_0x11ee301f0 .scope task, "FinishSimulation" "FinishSimulation" 3 49, 3 49 0, S_0x11ee06b70;
+ .timescale -9 -12;
+TD_InstructionRegisterSimulation.F.FinishSimulation ;
+    %vpi_call 3 52 "$fwrite", v0x11ee306f0_0, "%0s Simulation Finished\012", v0x11ee30630_0 {0 0 0};
+    %vpi_call 3 53 "$fwrite", v0x11ee306f0_0, "------------------------------------\012" {0 0 0};
+    %vpi_call 3 54 "$fwrite", v0x11ee306f0_0, "\012" {0 0 0};
+    %vpi_call 3 55 "$fwrite", v0x11ee306f0_0, "\012" {0 0 0};
+    %vpi_call 3 56 "$fwrite", v0x11ee306f0_0, "\012" {0 0 0};
+    %vpi_call 3 57 "$fclose", v0x11ee306f0_0 {0 0 0};
+    %vpi_call 3 60 "$fclose", v0x11ee307a0_0 {0 0 0};
+    %vpi_call 3 63 "$display", "%0s Simulation Finished", v0x11ee30630_0 {0 0 0};
+    %vpi_call 3 64 "$display", "%0d Test Failed", v0x11ee30860_0 {0 0 0};
+    %vpi_call 3 65 "$display", "%0d Test Passed", v0x11ee30910_0 {0 0 0};
+    %vpi_call 3 66 "$display", "------------------------------------" {0 0 0};
+    %end;
+S_0x11ee303c0 .scope task, "InitializeSimulation" "InitializeSimulation" 3 20, 3 20 0, S_0x11ee06b70;
+ .timescale -9 -12;
+v0x11ee305a0_0 .var "FirstTest", 0 0;
+TD_InstructionRegisterSimulation.F.InitializeSimulation ;
+    %load/vec4 v0x11ee305a0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.2, 8;
+    %vpi_func 3 25 "$fopen" 32, "./debug.txt", "w" {0 0 0};
+    %store/vec4 v0x11ee306f0_0, 0, 32;
+    %jmp T_2.3;
+T_2.2 ;
+    %vpi_func 3 28 "$fopen" 32, "./debug.txt", "a+" {0 0 0};
+    %store/vec4 v0x11ee306f0_0, 0, 32;
+T_2.3 ;
+    %vpi_call 3 30 "$fwrite", v0x11ee306f0_0, "------------------------------------\012" {0 0 0};
+    %vpi_call 3 31 "$fwrite", v0x11ee306f0_0, "%0s Simulation Started\012", v0x11ee30630_0 {0 0 0};
+    %load/vec4 v0x11ee305a0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.4, 8;
+    %vpi_func 3 35 "$fopen" 32, "./evaluation.csv", "w" {0 0 0};
+    %store/vec4 v0x11ee307a0_0, 0, 32;
+    %vpi_call 3 36 "$fwrite", v0x11ee307a0_0, "module_name;testno,test_name;passed;actual_value;expected_value\012" {0 0 0};
+    %jmp T_2.5;
+T_2.4 ;
+    %vpi_func 3 39 "$fopen" 32, "./evaluation.csv", "a+" {0 0 0};
+    %store/vec4 v0x11ee307a0_0, 0, 32;
+T_2.5 ;
+    %vpi_call 3 43 "$display", "------------------------------------" {0 0 0};
+    %vpi_call 3 44 "$display", "%0s Simulation Started", v0x11ee30630_0 {0 0 0};
+    %end;
+S_0x11ee30a00 .scope module, "IR" "InstructionRegister" 2 15, 4 3 0, S_0x11ee08ca0;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 8 "I";
+    .port_info 1 /INPUT 1 "Write";
+    .port_info 2 /INPUT 1 "LH";
+    .port_info 3 /INPUT 1 "Clock";
+    .port_info 4 /OUTPUT 16 "IROut";
+v0x11ee30cc0_0 .net "Clock", 0 0, v0x11ee31450_0;  1 drivers
+v0x11ee30d60_0 .net "I", 7 0, v0x11ee314e0_0;  1 drivers
+v0x11ee30e10_0 .var "IROut", 15 0;
+v0x11ee30ed0_0 .net "LH", 0 0, v0x11ee31650_0;  1 drivers
+v0x11ee30f70_0 .net "Write", 0 0, v0x11ee31720_0;  1 drivers
+E_0x11ee30c80 .event posedge, v0x11ee30cc0_0;
+S_0x11ee310d0 .scope module, "clk" "CrystalOscillator" 2 14, 3 104 0, S_0x11ee08ca0;
+ .timescale -9 -12;
+v0x11ee31450_0 .var "clock", 0 0;
+S_0x11ee31290 .scope task, "Clock" "Clock" 3 107, 3 107 0, S_0x11ee310d0;
+ .timescale -9 -12;
+TD_InstructionRegisterSimulation.clk.Clock ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x11ee31450_0, 0, 1;
+    %delay 20000, 0;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x11ee31450_0, 0, 1;
+    %delay 20000, 0;
+    %end;
+    .scope S_0x11ee30a00;
+T_4 ;
+    %pushi/vec4 0, 0, 16;
+    %store/vec4 v0x11ee30e10_0, 0, 16;
+    %end;
+    .thread T_4;
+    .scope S_0x11ee30a00;
+T_5 ;
+    %wait E_0x11ee30c80;
+    %load/vec4 v0x11ee30f70_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_5.0, 8;
+    %load/vec4 v0x11ee30ed0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_5.2, 8;
+    %load/vec4 v0x11ee30d60_0;
+    %ix/load 4, 8, 0;
+    %ix/load 5, 0, 0;
+    %flag_set/imm 4, 0;
+    %assign/vec4/off/d v0x11ee30e10_0, 4, 5;
+    %jmp T_5.3;
+T_5.2 ;
+    %load/vec4 v0x11ee30d60_0;
+    %ix/load 4, 0, 0;
+    %ix/load 5, 0, 0;
+    %flag_set/imm 4, 0;
+    %assign/vec4/off/d v0x11ee30e10_0, 4, 5;
+T_5.3 ;
+T_5.0 ;
+    %jmp T_5;
+    .thread T_5;
+    .scope S_0x11ee06b70;
+T_6 ;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x11ee30860_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x11ee30910_0, 0, 32;
+    %end;
+    .thread T_6;
+    .scope S_0x11ee08ca0;
+T_7 ;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 4812403, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1953658211, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1953066862, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1382377321, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1937007986, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x11ee30630_0, 0, 512;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x11ee305a0_0, 0, 1;
+    %fork TD_InstructionRegisterSimulation.F.InitializeSimulation, S_0x11ee303c0;
+    %join;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x11ee31450_0, 0, 1;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x11ee317d0_0, 0, 32;
+    %pushi/vec4 9063, 0, 16;
+    %store/vec4 v0x11ee30e10_0, 0, 16;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x11ee31650_0, 0, 1;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x11ee31720_0, 0, 1;
+    %pushi/vec4 21, 0, 8;
+    %store/vec4 v0x11ee314e0_0, 0, 8;
+    %delay 5000, 0;
+    %fork TD_InstructionRegisterSimulation.clk.Clock, S_0x11ee31290;
+    %join;
+    %load/vec4 v0x11ee315a0_0;
+    %pad/u 32;
+    %store/vec4 v0x11ee08e10_0, 0, 32;
+    %pushi/vec4 8981, 0, 32;
+    %store/vec4 v0x11ee2fff0_0, 0, 32;
+    %load/vec4 v0x11ee317d0_0;
+    %store/vec4 v0x11ee30140_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 73, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1380939124, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x11ee30090_0, 0, 256;
+    %fork TD_InstructionRegisterSimulation.F.CheckValues, S_0x11ee06ce0;
+    %join;
+    %pushi/vec4 2, 0, 32;
+    %store/vec4 v0x11ee317d0_0, 0, 32;
+    %pushi/vec4 9063, 0, 16;
+    %store/vec4 v0x11ee30e10_0, 0, 16;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x11ee31650_0, 0, 1;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x11ee31720_0, 0, 1;
+    %pushi/vec4 21, 0, 8;
+    %store/vec4 v0x11ee314e0_0, 0, 8;
+    %delay 5000, 0;
+    %fork TD_InstructionRegisterSimulation.clk.Clock, S_0x11ee31290;
+    %join;
+    %load/vec4 v0x11ee315a0_0;
+    %pad/u 32;
+    %store/vec4 v0x11ee08e10_0, 0, 32;
+    %pushi/vec4 5479, 0, 32;
+    %store/vec4 v0x11ee2fff0_0, 0, 32;
+    %load/vec4 v0x11ee317d0_0;
+    %store/vec4 v0x11ee30140_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 73, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1380939124, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x11ee30090_0, 0, 256;
+    %fork TD_InstructionRegisterSimulation.F.CheckValues, S_0x11ee06ce0;
+    %join;
+    %fork TD_InstructionRegisterSimulation.F.FinishSimulation, S_0x11ee301f0;
+    %join;
+    %end;
+    .thread T_7;
+# The file index is used to find the file name in the following table.
+:file_names 5;
+    "N/A";
+    "<interactive>";
+    "../InstructionRegisterSimulation.v";
+    "../Helper.v";
+    "../InstructionRegister.v";

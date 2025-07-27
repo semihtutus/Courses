@@ -1,0 +1,760 @@
+#! /opt/homebrew/Cellar/icarus-verilog/12.0/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/va_math.vpi";
+S_0x13e7131b0 .scope module, "ArithmeticLogicUnitSimulation" "ArithmeticLogicUnitSimulation" 2 8;
+ .timescale -9 -12;
+L_0x13e7424b0 .functor BUFZ 4, v0x13e740090_0, C4<0000>, C4<0000>, C4<0000>;
+v0x13e741870_0 .var "A", 31 0;
+v0x13e741930_0 .net "ALUOut", 31 0, v0x13e73fdc0_0;  1 drivers
+v0x13e7419e0_0 .var "B", 31 0;
+v0x13e741ab0_0 .net "C", 0 0, L_0x13e7421b0;  1 drivers
+v0x13e741b40_0 .net "FlagsOut", 3 0, v0x13e740090_0;  1 drivers
+v0x13e741c10_0 .var "FunSel", 4 0;
+v0x13e741cc0_0 .net "N", 0 0, L_0x13e7422b0;  1 drivers
+v0x13e741d50_0 .net "O", 0 0, L_0x13e742370;  1 drivers
+v0x13e741df0_0 .var "WF", 0 0;
+v0x13e741f20_0 .net "Z", 0 0, L_0x13e7420d0;  1 drivers
+v0x13e741fb0_0 .net *"_ivl_6", 3 0, L_0x13e7424b0;  1 drivers
+v0x13e742040_0 .var/i "test_no", 31 0;
+L_0x13e7420d0 .part L_0x13e7424b0, 3, 1;
+L_0x13e7421b0 .part L_0x13e7424b0, 2, 1;
+L_0x13e7422b0 .part L_0x13e7424b0, 1, 1;
+L_0x13e742370 .part L_0x13e7424b0, 0, 1;
+S_0x13e71c0b0 .scope module, "ALU" "ArithmeticLogicUnit" 2 17, 3 3 0, S_0x13e7131b0;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 32 "A";
+    .port_info 1 /INPUT 32 "B";
+    .port_info 2 /INPUT 5 "FunSel";
+    .port_info 3 /INPUT 1 "WF";
+    .port_info 4 /INPUT 1 "Clock";
+    .port_info 5 /OUTPUT 32 "ALUOut";
+    .port_info 6 /OUTPUT 4 "FlagsOut";
+v0x13e713320_0 .net "A", 31 0, v0x13e741870_0;  1 drivers
+v0x13e73fdc0_0 .var "ALUOut", 31 0;
+v0x13e73fe60_0 .net "B", 31 0, v0x13e7419e0_0;  1 drivers
+v0x13e73ff10_0 .var "C", 0 0;
+v0x13e73ffb0_0 .net "Clock", 0 0, v0x13e7417b0_0;  1 drivers
+v0x13e740090_0 .var "FlagsOut", 3 0;
+v0x13e740140_0 .net "FunSel", 4 0, v0x13e741c10_0;  1 drivers
+v0x13e7401f0_0 .var "N", 0 0;
+v0x13e740290_0 .var "O", 0 0;
+v0x13e7403a0_0 .net "WF", 0 0, v0x13e741df0_0;  1 drivers
+v0x13e740430_0 .var "Z", 0 0;
+v0x13e7404d0_0 .var "temp_result", 32 0;
+E_0x13e713480 .event posedge, v0x13e73ffb0_0;
+E_0x13e7138a0/0 .event anyedge, v0x13e740140_0, v0x13e713320_0, v0x13e73fe60_0, v0x13e7404d0_0;
+E_0x13e7138a0/1 .event anyedge, v0x13e73fdc0_0, v0x13e740090_0;
+E_0x13e7138a0 .event/or E_0x13e7138a0/0, E_0x13e7138a0/1;
+S_0x13e7405f0 .scope module, "F" "FileOperation" 2 20, 4 15 0, S_0x13e7131b0;
+ .timescale -9 -12;
+v0x13e741060_0 .var "SimulationName", 511 0;
+v0x13e741120_0 .var/i "df", 31 0;
+v0x13e7411d0_0 .var/i "ef", 31 0;
+v0x13e741290_0 .var/i "fails", 31 0;
+v0x13e741340_0 .var/i "success", 31 0;
+S_0x13e7407c0 .scope task, "CheckValues" "CheckValues" 4 72, 4 72 0, S_0x13e7405f0;
+ .timescale -9 -12;
+v0x13e740980_0 .var "actual", 31 0;
+v0x13e740a10_0 .var "expected", 31 0;
+v0x13e740ab0_0 .var "name", 255 0;
+v0x13e740b70_0 .var "testno", 31 0;
+TD_ArithmeticLogicUnitSimulation.F.CheckValues ;
+    %load/vec4 v0x13e740980_0;
+    %load/vec4 v0x13e740a10_0;
+    %cmp/e;
+    %jmp/0xz  T_0.0, 6;
+    %load/vec4 v0x13e741340_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x13e741340_0, 0, 32;
+    %vpi_call 4 79 "$fwrite", v0x13e741120_0, "[PASS] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h\012", v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+    %vpi_call 4 82 "$fwrite", v0x13e7411d0_0, "%0s;%0d;%0s;1;0x%h;0x%h\012", v0x13e741060_0, v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+    %vpi_call 4 85 "$display", "[PASS] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h", v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x13e741290_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x13e741290_0, 0, 32;
+    %vpi_call 4 91 "$fwrite", v0x13e741120_0, "[FAIL] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h\012", v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+    %vpi_call 4 94 "$fwrite", v0x13e7411d0_0, "%0s;%0d;%0s;0;0x%h;0x%h\012", v0x13e741060_0, v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+    %vpi_call 4 97 "$display", "[FAIL] Test No: %0d, Component: %0s, Actual Value: 0x%h, Expected Value: 0x%h", v0x13e740b70_0, v0x13e740ab0_0, v0x13e740980_0, v0x13e740a10_0 {0 0 0};
+T_0.1 ;
+    %end;
+S_0x13e740c20 .scope task, "FinishSimulation" "FinishSimulation" 4 49, 4 49 0, S_0x13e7405f0;
+ .timescale -9 -12;
+TD_ArithmeticLogicUnitSimulation.F.FinishSimulation ;
+    %vpi_call 4 52 "$fwrite", v0x13e741120_0, "%0s Simulation Finished\012", v0x13e741060_0 {0 0 0};
+    %vpi_call 4 53 "$fwrite", v0x13e741120_0, "------------------------------------\012" {0 0 0};
+    %vpi_call 4 54 "$fwrite", v0x13e741120_0, "\012" {0 0 0};
+    %vpi_call 4 55 "$fwrite", v0x13e741120_0, "\012" {0 0 0};
+    %vpi_call 4 56 "$fwrite", v0x13e741120_0, "\012" {0 0 0};
+    %vpi_call 4 57 "$fclose", v0x13e741120_0 {0 0 0};
+    %vpi_call 4 60 "$fclose", v0x13e7411d0_0 {0 0 0};
+    %vpi_call 4 63 "$display", "%0s Simulation Finished", v0x13e741060_0 {0 0 0};
+    %vpi_call 4 64 "$display", "%0d Test Failed", v0x13e741290_0 {0 0 0};
+    %vpi_call 4 65 "$display", "%0d Test Passed", v0x13e741340_0 {0 0 0};
+    %vpi_call 4 66 "$display", "------------------------------------" {0 0 0};
+    %end;
+S_0x13e740df0 .scope task, "InitializeSimulation" "InitializeSimulation" 4 20, 4 20 0, S_0x13e7405f0;
+ .timescale -9 -12;
+v0x13e740fd0_0 .var "FirstTest", 0 0;
+TD_ArithmeticLogicUnitSimulation.F.InitializeSimulation ;
+    %load/vec4 v0x13e740fd0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.2, 8;
+    %vpi_func 4 25 "$fopen" 32, "./debug.txt", "w" {0 0 0};
+    %store/vec4 v0x13e741120_0, 0, 32;
+    %jmp T_2.3;
+T_2.2 ;
+    %vpi_func 4 28 "$fopen" 32, "./debug.txt", "a+" {0 0 0};
+    %store/vec4 v0x13e741120_0, 0, 32;
+T_2.3 ;
+    %vpi_call 4 30 "$fwrite", v0x13e741120_0, "------------------------------------\012" {0 0 0};
+    %vpi_call 4 31 "$fwrite", v0x13e741120_0, "%0s Simulation Started\012", v0x13e741060_0 {0 0 0};
+    %load/vec4 v0x13e740fd0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.4, 8;
+    %vpi_func 4 35 "$fopen" 32, "./evaluation.csv", "w" {0 0 0};
+    %store/vec4 v0x13e7411d0_0, 0, 32;
+    %vpi_call 4 36 "$fwrite", v0x13e7411d0_0, "module_name;testno,test_name;passed;actual_value;expected_value\012" {0 0 0};
+    %jmp T_2.5;
+T_2.4 ;
+    %vpi_func 4 39 "$fopen" 32, "./evaluation.csv", "a+" {0 0 0};
+    %store/vec4 v0x13e7411d0_0, 0, 32;
+T_2.5 ;
+    %vpi_call 4 43 "$display", "------------------------------------" {0 0 0};
+    %vpi_call 4 44 "$display", "%0s Simulation Started", v0x13e741060_0 {0 0 0};
+    %end;
+S_0x13e741430 .scope module, "clk" "CrystalOscillator" 2 16, 4 104 0, S_0x13e7131b0;
+ .timescale -9 -12;
+v0x13e7417b0_0 .var "clock", 0 0;
+S_0x13e7415f0 .scope task, "Clock" "Clock" 4 107, 4 107 0, S_0x13e741430;
+ .timescale -9 -12;
+TD_ArithmeticLogicUnitSimulation.clk.Clock ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e7417b0_0, 0, 1;
+    %delay 20000, 0;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13e7417b0_0, 0, 1;
+    %delay 20000, 0;
+    %end;
+    .scope S_0x13e71c0b0;
+T_4 ;
+    %wait E_0x13e7138a0;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e740430_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e73ff10_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e7401f0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e740290_0, 0, 1;
+    %pushi/vec4 0, 0, 33;
+    %store/vec4 v0x13e7404d0_0, 0, 33;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e73fdc0_0, 0, 32;
+    %load/vec4 v0x13e740140_0;
+    %dup/vec4;
+    %pushi/vec4 20, 0, 5;
+    %cmp/u;
+    %jmp/1 T_4.0, 6;
+    %dup/vec4;
+    %pushi/vec4 21, 0, 5;
+    %cmp/u;
+    %jmp/1 T_4.1, 6;
+    %jmp T_4.2;
+T_4.0 ;
+    %load/vec4 v0x13e713320_0;
+    %pad/u 33;
+    %load/vec4 v0x13e73fe60_0;
+    %pad/u 33;
+    %add;
+    %store/vec4 v0x13e7404d0_0, 0, 33;
+    %load/vec4 v0x13e7404d0_0;
+    %parti/s 32, 0, 2;
+    %store/vec4 v0x13e73fdc0_0, 0, 32;
+    %load/vec4 v0x13e73fdc0_0;
+    %pushi/vec4 0, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %store/vec4 v0x13e740430_0, 0, 1;
+    %load/vec4 v0x13e7404d0_0;
+    %parti/s 1, 32, 7;
+    %store/vec4 v0x13e73ff10_0, 0, 1;
+    %load/vec4 v0x13e73fdc0_0;
+    %parti/s 1, 31, 6;
+    %store/vec4 v0x13e7401f0_0, 0, 1;
+    %load/vec4 v0x13e713320_0;
+    %parti/s 1, 31, 6;
+    %load/vec4 v0x13e73fe60_0;
+    %parti/s 1, 31, 6;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %jmp/0 T_4.3, 4;
+    %load/vec4 v0x13e713320_0;
+    %parti/s 1, 31, 6;
+    %load/vec4 v0x13e73fdc0_0;
+    %parti/s 1, 31, 6;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+T_4.3;
+    %store/vec4 v0x13e740290_0, 0, 1;
+    %jmp T_4.2;
+T_4.1 ;
+    %load/vec4 v0x13e713320_0;
+    %pad/u 33;
+    %load/vec4 v0x13e73fe60_0;
+    %pad/u 33;
+    %add;
+    %load/vec4 v0x13e740090_0;
+    %parti/s 1, 2, 3;
+    %pad/u 33;
+    %add;
+    %store/vec4 v0x13e7404d0_0, 0, 33;
+    %load/vec4 v0x13e7404d0_0;
+    %parti/s 32, 0, 2;
+    %store/vec4 v0x13e73fdc0_0, 0, 32;
+    %load/vec4 v0x13e713320_0;
+    %cmpi/e 2004318071, 0, 32;
+    %flag_get/vec4 4;
+    %jmp/0 T_4.6, 4;
+    %load/vec4 v0x13e73fe60_0;
+    %pushi/vec4 2290649224, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %and;
+T_4.6;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_4.4, 8;
+    %load/vec4 v0x13e73fdc0_0;
+    %pushi/vec4 0, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %store/vec4 v0x13e740430_0, 0, 1;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13e73ff10_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e7401f0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e740290_0, 0, 1;
+    %jmp T_4.5;
+T_4.4 ;
+    %load/vec4 v0x13e73fdc0_0;
+    %pushi/vec4 0, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %store/vec4 v0x13e740430_0, 0, 1;
+    %load/vec4 v0x13e7404d0_0;
+    %parti/s 1, 32, 7;
+    %store/vec4 v0x13e73ff10_0, 0, 1;
+    %load/vec4 v0x13e73fdc0_0;
+    %parti/s 1, 31, 6;
+    %store/vec4 v0x13e7401f0_0, 0, 1;
+    %load/vec4 v0x13e713320_0;
+    %parti/s 1, 31, 6;
+    %load/vec4 v0x13e73fe60_0;
+    %parti/s 1, 31, 6;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %jmp/0 T_4.7, 4;
+    %load/vec4 v0x13e713320_0;
+    %parti/s 1, 31, 6;
+    %load/vec4 v0x13e73fdc0_0;
+    %parti/s 1, 31, 6;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+T_4.7;
+    %store/vec4 v0x13e740290_0, 0, 1;
+T_4.5 ;
+    %jmp T_4.2;
+T_4.2 ;
+    %pop/vec4 1;
+    %jmp T_4;
+    .thread T_4, $push;
+    .scope S_0x13e71c0b0;
+T_5 ;
+    %wait E_0x13e713480;
+    %load/vec4 v0x13e7403a0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_5.0, 8;
+    %load/vec4 v0x13e740430_0;
+    %load/vec4 v0x13e73ff10_0;
+    %concat/vec4; draw_concat_vec4
+    %load/vec4 v0x13e7401f0_0;
+    %concat/vec4; draw_concat_vec4
+    %load/vec4 v0x13e740290_0;
+    %concat/vec4; draw_concat_vec4
+    %assign/vec4 v0x13e740090_0, 0;
+T_5.0 ;
+    %jmp T_5;
+    .thread T_5;
+    .scope S_0x13e7405f0;
+T_6 ;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e741290_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e741340_0, 0, 32;
+    %end;
+    .thread T_6;
+    .scope S_0x13e7131b0;
+T_7 ;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 4289129, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1953000805, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1953063756, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1869048163, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1433299316, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e741060_0, 0, 512;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e740fd0_0, 0, 1;
+    %fork TD_ArithmeticLogicUnitSimulation.F.InitializeSimulation, S_0x13e740df0;
+    %join;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13e7417b0_0, 0, 1;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e742040_0, 0, 32;
+    %pushi/vec4 305402420, 0, 32;
+    %store/vec4 v0x13e741870_0, 0, 32;
+    %pushi/vec4 1126253345, 0, 32;
+    %store/vec4 v0x13e7419e0_0, 0, 32;
+    %pushi/vec4 15, 0, 4;
+    %store/vec4 v0x13e740090_0, 0, 4;
+    %pushi/vec4 20, 0, 5;
+    %store/vec4 v0x13e741c10_0, 0, 5;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13e741df0_0, 0, 1;
+    %delay 5000, 0;
+    %load/vec4 v0x13e741930_0;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1431655765, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 16716, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1431270772, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741f20_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 90, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741ab0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 67, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741cc0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 78, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741d50_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 79, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %pushi/vec4 2, 0, 32;
+    %store/vec4 v0x13e742040_0, 0, 32;
+    %fork TD_ArithmeticLogicUnitSimulation.clk.Clock, S_0x13e7415f0;
+    %join;
+    %load/vec4 v0x13e741930_0;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1431655765, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 16716, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1431270772, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741f20_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 90, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741ab0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 67, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741cc0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 78, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741d50_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 79, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %pushi/vec4 3, 0, 32;
+    %store/vec4 v0x13e742040_0, 0, 32;
+    %pushi/vec4 2004318071, 0, 32;
+    %store/vec4 v0x13e741870_0, 0, 32;
+    %pushi/vec4 2290649224, 0, 32;
+    %store/vec4 v0x13e7419e0_0, 0, 32;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13e740090_0, 0, 4;
+    %pushi/vec4 21, 0, 5;
+    %store/vec4 v0x13e741c10_0, 0, 5;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13e741df0_0, 0, 1;
+    %delay 5000, 0;
+    %fork TD_ArithmeticLogicUnitSimulation.clk.Clock, S_0x13e7415f0;
+    %join;
+    %load/vec4 v0x13e741930_0;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 16716, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1431270772, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741f20_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 90, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741ab0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 67, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741cc0_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 78, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %load/vec4 v0x13e741d50_0;
+    %pad/u 32;
+    %store/vec4 v0x13e740980_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x13e740a10_0, 0, 32;
+    %load/vec4 v0x13e742040_0;
+    %store/vec4 v0x13e740b70_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 79, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x13e740ab0_0, 0, 256;
+    %fork TD_ArithmeticLogicUnitSimulation.F.CheckValues, S_0x13e7407c0;
+    %join;
+    %fork TD_ArithmeticLogicUnitSimulation.F.FinishSimulation, S_0x13e740c20;
+    %join;
+    %end;
+    .thread T_7;
+# The file index is used to find the file name in the following table.
+:file_names 5;
+    "N/A";
+    "<interactive>";
+    "../ArithmeticLogicUnitSimulation.v";
+    "../ArithmeticLogicUnit.v";
+    "../Helper.v";
