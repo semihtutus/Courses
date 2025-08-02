@@ -52,7 +52,7 @@ module ArithmeticLogicUnitSystem(
 
     wire [31:0] DROut;              // Output from Data Register
     
-                                    // Data Register instantiation with correct port names
+    // Data Register instantiation with correct port names
     DataRegister DR(                
         .I(MuxCOut),                // Input data to be written to Data Register
         .FunSel(DR_FunSel),         // Function select for Data Register
@@ -61,7 +61,8 @@ module ArithmeticLogicUnitSystem(
         .Reset(Reset),              // Reset signal
         .DROut(DROut)               // Output from Data Register
     );
-                                    // Instruction Register instantiation
+    
+    // Instruction Register instantiation
     InstructionRegister IR(
         .I(MemOut),                 // Input data to be written to Instruction Register
         .Write(IR_Write),           // Write flag for Instruction Register
@@ -70,7 +71,8 @@ module ArithmeticLogicUnitSystem(
         .Reset(Reset),              // Reset signal
         .IROut(IROut)               // Output from Instruction Register
     );
-                                    // Address Register File instantiation
+    
+    // Address Register File instantiation
     AddressRegisterFile ARF(
         .I(MuxBOut[15:0]),          // Input data to be written to Address Register File
         .OutCSel(ARF_OutCSel),      // Selector for output C from Address Register File
@@ -82,7 +84,8 @@ module ArithmeticLogicUnitSystem(
         .OutC(OutC),                // Output C from Address Register File
         .OutD(Address)              // Output D from Address Register File
     );
-                                    // Register File instantiation
+    
+    // Register File instantiation
     RegisterFile RF(
         .I(MuxAOut),                // Input data to be written to registers
         .OutASel(RF_OutASel),       // Selector for output A from Register File
@@ -95,7 +98,8 @@ module ArithmeticLogicUnitSystem(
         .OutA(OutA),                // Output A from Register File
         .OutB(OutB)                 // Output B from Register File
     );
-                                    // ALU instantiation
+    
+    // ALU instantiation
     ArithmeticLogicUnit ALU(
         .A(OutA),                   // Input A for ALU operations
         .B(OutB),                   // Input B for ALU operations
@@ -107,7 +111,7 @@ module ArithmeticLogicUnitSystem(
         .FlagsOut(ALUOutFlag)       // Flags output from ALU
     );
     
-                                    // Memory module instantiation
+    // Memory module instantiation
     Memory MEM(
         .Address(Address),          // Address input for Memory operations
         .Data(MuxCOut),             // Data input for Memory operations
@@ -117,26 +121,25 @@ module ArithmeticLogicUnitSystem(
         .MemOut(MemOut)             // Output from Memory
     );
     
-                                                                  // MuxD implementation
-    assign MuxDOut = (MuxDSel) ? {{16{1'b0}}, OutC} : OutA;       // Select between OutC and OutA for Mux D
+    // MuxD implementation
+    assign MuxDOut = (MuxDSel) ? {{16{1'b0}}, OutC} : OutA;
     
-                                                                  // MuxA implementation
-    assign MuxAOut = (MuxASel == 2'b00) ? ALUOut :                // Select ALUOut for Mux A
-                    (MuxASel == 2'b01) ? {{16{1'b0}}, OutC} :     // Select OutC for Mux A
-                    (MuxASel == 2'b10) ? {{24{1'b0}}, MemOut} :   // Select MemOut for Mux A
-                    {{16{1'b0}}, IROut};                          // Select IROut for Mux A
+    // MuxA implementation - CORRECTED according to Project 1 Table 9
+    assign MuxAOut = (MuxASel == 2'b00) ? ALUOut :                // 00: ALUOut
+                    (MuxASel == 2'b01) ? {{16{1'b0}}, OutC} :     // 01: ARF OutC
+                    (MuxASel == 2'b10) ? DROut :                  // 10: DROut
+                    {{24{1'b0}}, IROut[7:0]};                     // 11: IROut (7:0)
 
-                                                                  // MuxB implementation
-    assign MuxBOut = (MuxBSel == 2'b00) ? ALUOut :                // Select ALUOut for Mux B
-                    (MuxBSel == 2'b01) ? {{16{1'b0}}, OutC} :     // Select OutC for Mux B
-                    (MuxBSel == 2'b10) ? {{24{1'b0}}, MemOut} :   // Select MemOut for Mux B
-                    {{16{1'b0}}, IROut};                          // Select IROut for Mux B
+    // MuxB implementation - CORRECTED according to Project 1 Table 9  
+    assign MuxBOut = (MuxBSel == 2'b00) ? ALUOut :                // 00: ALUOut
+                    (MuxBSel == 2'b01) ? {{16{1'b0}}, OutC} :     // 01: ARF OutC
+                    (MuxBSel == 2'b10) ? DROut :                  // 10: DROut
+                    {{24{1'b0}}, IROut[7:0]};                     // 11: IROut (7:0)
 
-                                                                  // MuxC implementation
+    // MuxC implementation
     assign MuxCOut = (MuxCSel == 2'b00) ? ALUOut[7:0] :           // Select lower 8 bits of ALUOut for Mux C
                     (MuxCSel == 2'b01) ? ALUOut[15:8] :           // Select middle 8 bits of ALUOut for Mux C
                     (MuxCSel == 2'b10) ? ALUOut[23:16] :          // Select upper middle 8 bits of ALUOut for Mux C
                     ALUOut[31:24];                                // Select upper 8 bits of ALUOut for Mux C
 
 endmodule
-

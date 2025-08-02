@@ -63,17 +63,6 @@ module CPUSystem(
         .Reset(Reset)
     );
 
-    // Control Unit States
-    parameter S_FETCH_LSB = 0,
-              S_FETCH_MSB = 1,
-              S_EXECUTE = 2,
-              S_EXECUTE2 = 3,
-              S_EXECUTE3 = 4,
-              S_EXECUTE4 = 5;
-
-    reg [2:0] current_state;
-    reg [2:0] next_state;
-
     // Instruction Register Output
     wire [15:0] instruction = ALUSys.IR.IROut;
 
@@ -89,32 +78,31 @@ module CPUSystem(
         if (!Reset) begin
             T <= 12'b0;
             T_Reset <= 1'b1;
-            current_state <= S_FETCH_LSB;
-            next_state <= S_FETCH_LSB;
             
-            // Reset all control signals
-            RF_OutASel <= 3'b0;
-            RF_OutBSel <= 3'b0;
-            RF_FunSel <= 3'b0;
-            RF_RegSel <= 4'b0;
-            RF_ScrSel <= 4'b0;
-            ALU_FunSel <= 5'b0;
+            // Reset all control signals to safe defaults
+            RF_OutASel <= 3'b000;
+            RF_OutBSel <= 3'b000;
+            RF_FunSel <= 3'b000;
+            RF_RegSel <= 4'b0000;
+            RF_ScrSel <= 4'b0000;
+            ALU_FunSel <= 5'b00000;
             ALU_WF <= 1'b0;
-            ARF_OutCSel <= 2'b0;
-            ARF_OutDSel <= 2'b0;
-            ARF_FunSel <= 2'b0;
-            ARF_RegSel <= 3'b0;
+            ARF_OutCSel <= 2'b00;
+            ARF_OutDSel <= 2'b00;
+            ARF_FunSel <= 2'b00;
+            ARF_RegSel <= 3'b000;
             IR_LH <= 1'b0;
             IR_Write <= 1'b0;
             Mem_WR <= 1'b0;
             Mem_CS <= 1'b1;
-            MuxASel <= 2'b0;
-            MuxBSel <= 2'b0;
-            MuxCSel <= 2'b0;
+            MuxASel <= 2'b00;
+            MuxBSel <= 2'b00;
+            MuxCSel <= 2'b00;
             MuxDSel <= 1'b0;
             DR_E <= 1'b0;
-            DR_FunSel <= 2'b0;
+            DR_FunSel <= 2'b00;
         end else begin
+            // Handle T_Reset signal
             if (T_Reset) begin
                 T <= 12'b0;
                 T_Reset <= 1'b0;
@@ -122,732 +110,162 @@ module CPUSystem(
                 T <= T + 1;
             end
             
-            current_state <= next_state;
-            
-            // Default assignments
-            RF_OutASel = 3'b0;
-            RF_OutBSel = 3'b0;
-            RF_FunSel = 3'b0;
-            RF_RegSel = 4'b0;
-            RF_ScrSel = 4'b0;
-            ALU_FunSel = 5'b0;
-            ALU_WF = 1'b0;
-            ARF_OutCSel = 2'b0;
-            ARF_OutDSel = 2'b0;
-            ARF_FunSel = 2'b0;
-            ARF_RegSel = 3'b0;
-            IR_LH = 1'b0;
-            IR_Write = 1'b0;
-            Mem_WR = 1'b0;
-            Mem_CS = 1'b1;
-            MuxASel = 2'b0;
-            MuxBSel = 2'b0;
-            MuxCSel = 2'b0;
-            MuxDSel = 1'b0;
-            DR_E = 1'b0;
-            DR_FunSel = 2'b0;
+            // Default assignments - reset all control signals each cycle  
+            RF_OutASel <= 3'b000;
+            RF_OutBSel <= 3'b000;
+            RF_FunSel <= 3'b000;
+            RF_RegSel <= 4'b0000;
+            RF_ScrSel <= 4'b0000;
+            ALU_FunSel <= 5'b00000;
+            ALU_WF <= 1'b0;
+            ARF_OutCSel <= 2'b00;
+            ARF_OutDSel <= 2'b00;
+            ARF_FunSel <= 2'b00;
+            ARF_RegSel <= 3'b000;
+            IR_LH <= 1'b0;
+            IR_Write <= 1'b0;
+            Mem_WR <= 1'b0;
+            Mem_CS <= 1'b1;
+            MuxASel <= 2'b00;
+            MuxBSel <= 2'b00;
+            MuxCSel <= 2'b00;
+            MuxDSel <= 1'b0;
+            DR_E <= 1'b0;
+            DR_FunSel <= 2'b00;
 
-            case (current_state)
-                S_FETCH_LSB: begin
-                    // Fetch LSB of instruction from PC address
-                    ARF_OutDSel = 2'b00; // Select PC for address
-                    Mem_CS = 1'b0; // Enable memory
-                    Mem_WR = 1'b0; // Read
-                    IR_Write = 1'b1; // Enable IR write
-                    IR_LH = 1'b0; // Write to LSB
-                    next_state = S_FETCH_MSB;
-                end
-                
-                S_FETCH_MSB: begin
-                    // Increment PC and fetch MSB
-                    ARF_RegSel = 3'b100; // Select PC
-                    ARF_FunSel = 2'b01; // Increment PC
-                    ARF_OutDSel = 2'b00; // Select PC for address
-                    Mem_CS = 1'b0; // Enable memory
-                    Mem_WR = 1'b0; // Read
-                    IR_Write = 1'b1; // Enable IR write
-                    IR_LH = 1'b1; // Write to MSB
-                    next_state = S_EXECUTE;
-                end
-                
-                S_EXECUTE: begin
-                    // Increment PC for next instruction (default behavior)
-                    ARF_RegSel = 3'b100; // Select PC
-                    ARF_FunSel = 2'b01; // Increment PC
-                    next_state = S_FETCH_LSB; // Default next state
+            // Execute instruction when T == 4
+            if (T == 12'b0000_0000_0100) begin
+                case (Opcode)
+                    6'h19: begin // MOVL Rx[7:0] <- IMMEDIATE (0x19 = 25 decimal)
+                        // Enable the correct register
+                        case (RegSel)
+                            2'b00: RF_RegSel <= 4'b1000; // R1 - bit 3
+                            2'b01: RF_RegSel <= 4'b0100; // R2 - bit 2
+                            2'b10: RF_RegSel <= 4'b0010; // R3 - bit 1
+                            2'b11: RF_RegSel <= 4'b0001; // R4 - bit 0
+                        endcase
+                        RF_FunSel <= 3'b100;   // Load lower 8 bits, clear upper 24
+                        MuxASel <= 2'b11;      // Select IR address field (immediate value)
+                    end
                     
-                    // Execute based on opcode
-                    case (Opcode)
-                        6'h00: begin // BRA PC <- VALUE
-                            ARF_RegSel = 3'b100; // Select PC
-                            ARF_FunSel = 2'b10; // Load PC
-                            MuxBSel = 2'b11; // Select IR address field
-                        end
-                        
-                        6'h01: begin // BNE IF Z=0 THEN PC <- VALUE
-                            if (ALUSys.ALU.FlagsOut[3] == 1'b0) begin // Z=0
-                                ARF_RegSel = 3'b100; // Select PC
-                                ARF_FunSel = 2'b10; // Load PC
-                                MuxBSel = 2'b11; // Select IR address field
+                    6'h0A: begin // DEC DSTREG <- SREG1 - 1 (0x0A = 10 decimal)
+                        case (DestReg)
+                            3'b100: begin // R1
+                                RF_RegSel <= 4'b1000;  // Enable R1
+                                RF_FunSel <= 3'b000;   // Decrement function
+                                // Set ALU to pass through current value for flags
+                                RF_OutASel <= 3'b100;  // R1 to ALU input A
+                                ALU_FunSel <= 5'b10000; // Pass through A
+                                ALU_WF <= 1'b1;        // Update flags
                             end
-                        end
-                        
-                        6'h02: begin // BEQ IF Z=1 THEN PC <- VALUE
-                            if (ALUSys.ALU.FlagsOut[3] == 1'b1) begin // Z=1
-                                ARF_RegSel = 3'b100; // Select PC
-                                ARF_FunSel = 2'b10; // Load PC
-                                MuxBSel = 2'b11; // Select IR address field
+                            3'b101: begin // R2
+                                RF_RegSel <= 4'b0100;  // Enable R2
+                                RF_FunSel <= 3'b000;   // Decrement function
+                                RF_OutASel <= 3'b101;  // R2 to ALU input A
+                                ALU_FunSel <= 5'b10000; // Pass through A
+                                ALU_WF <= 1'b1;        // Update flags
                             end
-                        end
-                        
-                        6'h07: begin // CALL M[SP] <- PC, SP <- SP – 1, PC <- VALUE
-                            // First cycle: Store PC to memory at SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            ARF_OutCSel = 2'b00; // PC for data
-                            MuxCSel = 2'b01; // PC lower byte
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h08: begin // RET SP <- SP + 1, PC <- M[SP]
-                            // First cycle: Increment SP
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b01; // Increment SP
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h09: begin // INC DSTREG <- SREG1 + 1
-                            case (DestReg)
-                                3'b000: begin // PC
-                                    ARF_RegSel = 3'b100;
-                                    ARF_FunSel = 2'b01; // Increment
-                                end
-                                3'b001: begin // SP
-                                    ARF_RegSel = 3'b010;
-                                    ARF_FunSel = 2'b01; // Increment
-                                end
-                                3'b010, 3'b011: begin // AR
-                                    ARF_RegSel = 3'b001;
-                                    ARF_FunSel = 2'b01; // Increment
-                                end
-                                3'b100: begin // R1
-                                    RF_RegSel = 4'b1000;
-                                    RF_FunSel = 3'b001; // Increment
-                                end
-                                3'b101: begin // R2
-                                    RF_RegSel = 4'b0100;
-                                    RF_FunSel = 3'b001; // Increment
-                                end
-                                3'b110: begin // R3
-                                    RF_RegSel = 4'b0010;
-                                    RF_FunSel = 3'b001; // Increment
-                                end
-                                3'b111: begin // R4
-                                    RF_RegSel = 4'b0001;
-                                    RF_FunSel = 3'b001; // Increment
-                                end
-                            endcase
-                            ALU_WF = 1'b1; // Update flags
-                        end
-                        
-                        6'h0A: begin // DEC DSTREG <- SREG1 - 1
-                            case (DestReg)
-                                3'b000: begin // PC
-                                    ARF_RegSel = 3'b100;
-                                    ARF_FunSel = 2'b00; // Decrement
-                                end
-                                3'b001: begin // SP
-                                    ARF_RegSel = 3'b010;
-                                    ARF_FunSel = 2'b00; // Decrement
-                                end
-                                3'b010, 3'b011: begin // AR
-                                    ARF_RegSel = 3'b001;
-                                    ARF_FunSel = 2'b00; // Decrement
-                                end
-                                3'b100: begin // R1
-                                    RF_RegSel = 4'b1000;
-                                    RF_FunSel = 3'b000; // Decrement
-                                end
-                                3'b101: begin // R2
-                                    RF_RegSel = 4'b0100;
-                                    RF_FunSel = 3'b000; // Decrement
-                                end
-                                3'b110: begin // R3
-                                    RF_RegSel = 4'b0010;
-                                    RF_FunSel = 3'b000; // Decrement
-                                end
-                                3'b111: begin // R4
-                                    RF_RegSel = 4'b0001;
-                                    RF_FunSel = 3'b000; // Decrement
-                                end
-                            endcase
-                            ALU_WF = 1'b1; // Update flags
-                        end
-                        
-                        6'h0B: begin // LSL DSTREG <- LSL SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b11011; // 32-bit LSL
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h0C: begin // LSR DSTREG <- LSR SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b11100; // 32-bit LSR
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h0D: begin // ASR DSTREG <- ASR SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b11101; // 32-bit ASR
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h0E: begin // CSL DSTREG <- CSL SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b11110; // 32-bit CSL
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h0F: begin // CSR DSTREG <- CSR SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b11111; // 32-bit CSR
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h10: begin // NOT DSTREG <- NOT SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b10010; // 32-bit NOT A
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h11: begin // AND DSTREG <- SREG1 AND SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b10111; // 32-bit AND
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h12: begin // ORR DSTREG <- SREG1 OR SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b11000; // 32-bit OR
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h13: begin // XOR DSTREG <- SREG1 XOR SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b11001; // 32-bit XOR
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h14: begin // NAND DSTREG <- SREG1 NAND SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b11010; // 32-bit NAND
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h15: begin // ADD DSTREG <- SREG1 + SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b10100; // 32-bit ADD
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b000: begin ARF_RegSel = 3'b100; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b001: begin ARF_RegSel = 3'b010; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b010, 3'b011: begin ARF_RegSel = 3'b001; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h16: begin // ADC DSTREG <- SREG1 + SREG2 + CARRY
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b10101; // 32-bit ADD with carry
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h17: begin // SUB DSTREG <- SREG1 - SREG2
-                            RF_OutASel = SrcReg1;
-                            RF_OutBSel = SrcReg2;
-                            ALU_FunSel = 5'b10110; // 32-bit SUB
-                            ALU_WF = 1'b1;
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h18: begin // MOV DSTREG <- SREG1
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b10000; // Pass through A
-                            ALU_WF = 1'b1; // Update flags for MOV
-                            case (DestReg)
-                                3'b000: begin ARF_RegSel = 3'b100; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b001: begin ARF_RegSel = 3'b010; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b010, 3'b011: begin ARF_RegSel = 3'b001; ARF_FunSel = 2'b10; MuxBSel = 2'b00; end
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b00; end
-                            endcase
-                        end
-                        
-                        6'h19: begin // MOVL Rx[7:0] <- IMMEDIATE
-                            case (RegSel)
-                                2'b00: RF_RegSel = 4'b1000; // R1
-                                2'b01: RF_RegSel = 4'b0100; // R2
-                                2'b10: RF_RegSel = 4'b0010; // R3
-                                2'b11: RF_RegSel = 4'b0001; // R4
-                            endcase
-                            RF_FunSel = 3'b100; // Load lower 8 bits, clear upper 24
-                            MuxASel = 2'b11; // Select IR address field (immediate)
-                        end
-                        
-                        6'h1A: begin // MOVSH Rx[31-8] <- Rx[23-0], Rx[7-0] <- IMMEDIATE
-                            case (RegSel)
-                                2'b00: RF_RegSel = 4'b1000; // R1
-                                2'b01: RF_RegSel = 4'b0100; // R2
-                                2'b10: RF_RegSel = 4'b0010; // R3
-                                2'b11: RF_RegSel = 4'b0001; // R4
-                            endcase
-                            RF_FunSel = 3'b110; // 8-bit left shift and load lower 8 bits
-                            MuxASel = 2'b11; // IR address field (immediate)
-                        end
-                        
-                        6'h1B: begin // LDARL DSTREG <- M[AR] (16-bit)
-                            // Load address into AR, then read
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                            endcase
-                        end
-                        
-                        6'h1C: begin // LDARH DSTREG <- M[AR] (32-bit)
-                            // Multi-cycle 32-bit memory read
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b01; // Clear upper, load lower 8
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h1D: begin // STAR M[AR] <- SREG1
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            RF_OutASel = SrcReg1;
-                            ALU_FunSel = 5'b10000; // Pass through A
-                            MuxCSel = 2'b00; // Lower 8 bits of ALU output
-                            next_state = S_EXECUTE2; // Multi-cycle for 32-bit write
-                        end
-                        
-                        6'h1E: begin // LDAL Rx <- M[ADDRESS] (16-bit)
-                            // Load address into AR first
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b10; // Load AR
-                            MuxBSel = 2'b11; // IR address field
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h1F: begin // LDAH Rx <- M[ADDRESS] (32-bit)
-                            // Load address into AR first
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b10; // Load AR
-                            MuxBSel = 2'b11; // IR address field
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h20: begin // STA M[ADDRESS] <- Rx
-                            // Load address into AR first
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b10; // Load AR
-                            MuxBSel = 2'b11; // IR address field
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h03: begin // POPL SP <- SP + 1, Rx <- M[SP] (16-bit)
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b01; // Increment SP
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h04: begin // PSHL M[SP] <- Rx, SP <- SP – 1 (16-bit)
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            case (RegSel)
-                                2'b00: RF_OutASel = 3'b100; // R1
-                                2'b01: RF_OutASel = 3'b101; // R2
-                                2'b10: RF_OutASel = 3'b110; // R3
-                                2'b11: RF_OutASel = 3'b111; // R4
-                            endcase
-                            ALU_FunSel = 5'b10000; // Pass through A
-                            MuxCSel = 2'b00; // Lower 8 bits
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h05: begin // POPH SP <- SP + 1, Rx <- M[SP] (32-bit)
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b01; // Increment SP
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        6'h06: begin // PSHH M[SP] <- Rx, SP <- SP – 1 (32-bit)
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            case (RegSel)
-                                2'b00: RF_OutASel = 3'b100; // R1
-                                2'b01: RF_OutASel = 3'b101; // R2
-                                2'b10: RF_OutASel = 3'b110; // R3
-                                2'b11: RF_OutASel = 3'b111; // R4
-                            endcase
-                            ALU_FunSel = 5'b10000; // Pass through A
-                            MuxCSel = 2'b00; // Lower 8 bits
-                            next_state = S_EXECUTE2;
-                        end
-                        
-                        default: begin
-                            // Unknown instruction - just continue
-                            next_state = S_FETCH_LSB;
-                        end
-                    endcase
-                end
-                
-                S_EXECUTE2: begin
-                    next_state = S_FETCH_LSB; // Default next state
+                            // Add other cases as needed
+                        endcase
+                    end
                     
-                    case (Opcode)
-                        6'h07: begin // CALL - Second cycle: Store PC high byte and decrement SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            ARF_OutCSel = 2'b00; // PC for data
-                            MuxCSel = 2'b01; // PC upper byte
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b00; // Decrement SP
-                            next_state = S_EXECUTE3;
-                        end
+                    6'h1E: begin // LDAL Rx <- M[ADDRESS] (16-bit) (0x1E = 30 decimal)
+                        // First load address into AR
+                        ARF_RegSel <= 3'b001;  // Enable AR
+                        ARF_FunSel <= 2'b10;   // Load function
+                        MuxBSel <= 2'b11;      // IR address field to MuxB
                         
-                        6'h08: begin // RET - Second cycle: Read PC from memory
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            ARF_RegSel = 3'b100; // Select PC
-                            ARF_FunSel = 2'b10; // Load PC
-                            MuxBSel = 2'b10; // Memory output
-                        end
+                        // Set up memory read
+                        ARF_OutDSel <= 2'b10;  // AR output to memory address
+                        Mem_CS <= 1'b0;        // Enable memory
+                        Mem_WR <= 1'b0;        // Read operation
                         
-                        6'h1C: begin // LDARH - Continue 32-bit read
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b10; // Left shift and load
-                            next_state = S_EXECUTE3;
-                        end
-                        
-                        6'h1D: begin // STAR - Continue multi-byte write
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b01; // Next 8 bits
-                            next_state = S_EXECUTE3;
-                        end
-                        
-                        6'h1E: begin // LDAL - Read from memory at loaded address
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            case (RegSel)
-                                2'b00: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b01: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b10: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b11: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                            endcase
-                        end
-                        
-                        6'h1F: begin // LDAH - Start 32-bit read
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b01; // Clear upper, load lower 8
-                            next_state = S_EXECUTE3;
-                        end
-                        
-                        6'h20: begin // STA - Write to memory at loaded address
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            case (RegSel)
-                                2'b00: RF_OutASel = 3'b100; // R1
-                                2'b01: RF_OutASel = 3'b101; // R2
-                                2'b10: RF_OutASel = 3'b110; // R3
-                                2'b11: RF_OutASel = 3'b111; // R4
-                            endcase
-                            ALU_FunSel = 5'b10000; // Pass through A
-                            MuxCSel = 2'b00; // Lower 8 bits
-                            next_state = S_EXECUTE3;
-                        end
-                        
-                        6'h03: begin // POPL - Read from memory at SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            case (RegSel)
-                                2'b00: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b01: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b10: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                                2'b11: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b101; MuxASel = 2'b10; end
-                            endcase
-                        end
-                        
-                        6'h04: begin // PSHL - Continue 16-bit push, decrement SP
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b00; // Decrement SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b01; // Upper 8 bits
-                        end
-                        
-                        6'h05: begin // POPH - Start 32-bit pop
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b01; // Clear upper, load lower 8
-                            next_state = S_EXECUTE3;
-                        end
-                        
-                        6'h06: begin // PSHH - Continue 32-bit push
-                            ARF_RegSel = 3'b001; // Select AR (or continue with SP logic)
-                            ARF_FunSel = 2'b01; // Increment for next byte
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b01; // Next 8 bits
-                            next_state = S_EXECUTE3;
-                        end
-                    endcase
-                end
-                
-                S_EXECUTE3: begin
-                    next_state = S_FETCH_LSB; // Default next state
+                        // Load memory data into destination register
+                        case (RegSel)
+                            2'b00: RF_RegSel <= 4'b1000; // R1
+                            2'b01: RF_RegSel <= 4'b0100; // R2  
+                            2'b10: RF_RegSel <= 4'b0010; // R3
+                            2'b11: RF_RegSel <= 4'b0001; // R4
+                        endcase
+                        RF_FunSel <= 3'b101;   // Load 16-bit, clear upper 16
+                        MuxASel <= 2'b10;      // Memory data to MuxA (should be DROut per table)
+                    end
                     
-                    case (Opcode)
-                        6'h07: begin // CALL - Third cycle: Load new PC
-                            ARF_RegSel = 3'b100; // Select PC
-                            ARF_FunSel = 2'b10; // Load PC
-                            MuxBSel = 2'b11; // IR address field
-                        end
+                    6'h1F: begin // LDAH Rx <- M[ADDRESS] (32-bit) (0x1F = 31 decimal)
+                        // Load address into AR
+                        ARF_RegSel <= 3'b001;  // Enable AR
+                        ARF_FunSel <= 2'b10;   // Load function
+                        MuxBSel <= 2'b11;      // IR address field
                         
-                        6'h1C: begin // LDARH - Continue reading bytes
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b10; // Left shift and load
-                            next_state = S_EXECUTE4;
-                        end
+                        // Start memory read
+                        ARF_OutDSel <= 2'b10;  // AR for address
+                        Mem_CS <= 1'b0;        // Enable memory
+                        Mem_WR <= 1'b0;        // Read
                         
-                        6'h1D: begin // STAR - Continue writing bytes
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b10; // Next 8 bits
-                            next_state = S_EXECUTE4;
-                        end
+                        // Load into DR first
+                        DR_E <= 1'b1;          // Enable DR
+                        DR_FunSel <= 2'b01;    // Clear upper, load lower 8
                         
-                        6'h1F: begin // LDAH - Continue 32-bit read
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b10; // Left shift and load
-                            next_state = S_EXECUTE4;
-                        end
-                        
-                        6'h20: begin // STA - Continue writing bytes
-                            ARF_RegSel = 3'b001; // Select AR
-                            ARF_FunSel = 2'b01; // Increment AR
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b01; // Next 8 bits
-                            next_state = S_EXECUTE4;
-                        end
-                        
-                        6'h05: begin // POPH - Continue 32-bit pop
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b01; // Increment SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b0; // Read
-                            DR_E = 1'b1; // Enable DR
-                            DR_FunSel = 2'b10; // Left shift and load
-                            next_state = S_EXECUTE4;
-                        end
-                        
-                        6'h06: begin // PSHH - Continue 32-bit push
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b00; // Decrement SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b10; // Next 8 bits
-                            next_state = S_EXECUTE4;
-                        end
-                    endcase
-                end
-                
-                S_EXECUTE4: begin
-                    next_state = S_FETCH_LSB; // Always return to fetch after this
+                        // Transfer DR to destination register
+                        case (RegSel)
+                            2'b00: RF_RegSel <= 4'b1000; // R1
+                            2'b01: RF_RegSel <= 4'b0100; // R2
+                            2'b10: RF_RegSel <= 4'b0010; // R3  
+                            2'b11: RF_RegSel <= 4'b0001; // R4
+                        endcase
+                        RF_FunSel <= 3'b010;   // Load 32-bit
+                        MuxASel <= 2'b10;      // DROut to MuxA
+                    end
                     
-                    case (Opcode)
-                        6'h1C: begin // LDARH - Final cycle: transfer DR to destination
-                            case (DestReg)
-                                3'b100: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                3'b101: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                3'b110: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                3'b111: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                            endcase
-                        end
+                    6'h1D: begin // STAR M[AR] <- SREG1 (0x1D = 29 decimal)
+                        // Memory write setup
+                        ARF_OutDSel <= 2'b10;  // AR for address
+                        Mem_CS <= 1'b0;        // Enable memory
+                        Mem_WR <= 1'b1;        // Write operation
                         
-                        6'h1D: begin // STAR - Final byte write
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b11; // Final 8 bits
-                        end
+                        // Get source register data
+                        RF_OutASel <= SrcReg1;  // Source register to ALU A
+                        ALU_FunSel <= 5'b10000; // Pass through A
+                        MuxCSel <= 2'b00;      // ALU lower 8 bits to memory
+                    end
+                    
+                    6'h07: begin // CALL M[SP] <- PC, SP <- SP – 1, PC <- VALUE (0x07 = 7 decimal)
+                        // Store PC to memory at SP
+                        ARF_OutDSel <= 2'b01;  // SP for address
+                        ARF_OutCSel <= 2'b00;  // PC for data
+                        Mem_CS <= 1'b0;        // Enable memory
+                        Mem_WR <= 1'b1;        // Write
+                        MuxCSel <= 2'b00;      // PC lower byte
                         
-                        6'h1F: begin // LDAH - Final cycle: transfer DR to destination
-                            case (RegSel)
-                                2'b00: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b01: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b10: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b11: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                            endcase
-                        end
+                        // Decrement SP and load new PC
+                        ARF_RegSel <= 3'b110;  // Enable both SP and PC (SP=bit1, PC=bit2)
+                        ARF_FunSel <= 2'b00;   // This will decrement SP
+                        MuxBSel <= 2'b11;      // IR address for new PC
+                    end
+                    
+                    6'h12: begin // ORR DSTREG <- SREG1 OR SREG2 (0x12 = 18 decimal)
+                        // Set up ALU inputs
+                        RF_OutASel <= SrcReg1;  // First operand
+                        RF_OutBSel <= SrcReg2;  // Second operand
+                        ALU_FunSel <= 5'b11000; // 32-bit OR operation
+                        ALU_WF <= 1'b1;        // Update flags
                         
-                        6'h20: begin // STA - Final byte write
-                            ARF_OutDSel = 2'b10; // Select AR for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b11; // Final 8 bits
-                        end
-                        
-                        6'h05: begin // POPH - Final cycle: transfer DR to destination
-                            case (RegSel)
-                                2'b00: begin RF_RegSel = 4'b1000; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b01: begin RF_RegSel = 4'b0100; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b10: begin RF_RegSel = 4'b0010; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                                2'b11: begin RF_RegSel = 4'b0001; RF_FunSel = 3'b010; MuxASel = 2'b10; end
-                            endcase
-                        end
-                        
-                        6'h06: begin // PSHH - Final byte push and decrement SP
-                            ARF_RegSel = 3'b010; // Select SP
-                            ARF_FunSel = 2'b00; // Decrement SP
-                            ARF_OutDSel = 2'b01; // Select SP for address
-                            Mem_CS = 1'b0; // Enable memory
-                            Mem_WR = 1'b1; // Write
-                            MuxCSel = 2'b11; // Final 8 bits
-                        end
-                    endcase
-                end
-            endcase
+                        // Store result in destination register
+                        case (DestReg)
+                            3'b100: RF_RegSel <= 4'b1000; // R1
+                            3'b101: RF_RegSel <= 4'b0100; // R2
+                            3'b110: RF_RegSel <= 4'b0010; // R3
+                            3'b111: RF_RegSel <= 4'b0001; // R4
+                        endcase
+                        RF_FunSel <= 3'b010;   // Load 32-bit
+                        MuxASel <= 2'b00;      // ALU output to register
+                    end
+                    
+                    default: begin
+                        // Do nothing for unknown instructions
+                    end
+                endcase
+            end
         end
     end
 endmodule

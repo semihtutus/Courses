@@ -19,10 +19,12 @@ module RegisterFile (
     wire R3E = RegSel[1];  // R3
     wire R4E = RegSel[0];  // R4
 
-    // Enable logic for scratch registers based o    wire S1E = ScrSel[3];  // S1
+    // Enable logic for scratch registers based on ScrSel - FIXED
+    wire S1E = ScrSel[3];  // S1
     wire S2E = ScrSel[2];  // S2
     wire S3E = ScrSel[1];  // S3
     wire S4E = ScrSel[0];  // S4  
+    
     Register32bit R1(.I(I), .FunSel(FunSel), .E(R1E), .Clock(Clock), .Reset(Reset), .Q(R1Q));  // Register for R1
     Register32bit R2(.I(I), .FunSel(FunSel), .E(R2E), .Clock(Clock), .Reset(Reset), .Q(R2Q));  // Register for R2
     Register32bit R3(.I(I), .FunSel(FunSel), .E(R3E), .Clock(Clock), .Reset(Reset), .Q(R3Q));  // Register for R3
@@ -59,4 +61,3 @@ module RegisterFile (
         endcase
     end
 endmodule
-
