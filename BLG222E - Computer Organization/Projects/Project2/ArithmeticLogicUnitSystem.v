@@ -136,10 +136,11 @@ module ArithmeticLogicUnitSystem(
                     (MuxBSel == 2'b10) ? DROut :                  // 10: DROut
                     {{24{1'b0}}, IROut[7:0]};                     // 11: IROut (7:0)
 
-    // MuxC implementation
+    // MuxC implementation - Modified to include MemOut option
     assign MuxCOut = (MuxCSel == 2'b00) ? ALUOut[7:0] :           // Select lower 8 bits of ALUOut for Mux C
-                    (MuxCSel == 2'b01) ? ALUOut[15:8] :           // Select middle 8 bits of ALUOut for Mux C
+                    (MuxCSel == 2'b01) ? ALUOut[15:8] :           // Select middle 8 bits of ALUOut for Mux C  
                     (MuxCSel == 2'b10) ? ALUOut[23:16] :          // Select upper middle 8 bits of ALUOut for Mux C
-                    ALUOut[31:24];                                // Select upper 8 bits of ALUOut for Mux C
+                    (Mem_WR) ? ALUOut[31:24] :                    // Select upper 8 bits of ALUOut when writing to memory
+                    MemOut;                                       // Select MemOut when reading from memory
 
 endmodule
