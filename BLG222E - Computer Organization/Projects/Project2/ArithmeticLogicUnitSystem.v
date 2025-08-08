@@ -24,6 +24,7 @@ module ArithmeticLogicUnitSystem(
     input [1:0] MuxASel,            // Selector for Mux A
     input [1:0] MuxBSel,            // Selector for Mux B
     input [1:0] MuxCSel,            // Selector for Mux C
+    input CallMode,                 // Signal to indicate CALL operation for OutC routing
     input MuxDSel,                  // Selector for Mux D
     input DR_E,                     // Enable signal for Data Register
     input [1:0] DR_FunSel,          // Function select for Data Register
@@ -136,11 +137,12 @@ module ArithmeticLogicUnitSystem(
                     (MuxBSel == 2'b10) ? DROut :                  // 10: DROut
                     {{24{1'b0}}, IROut[7:0]};                     // 11: IROut (7:0)
 
-    // MuxC implementation - Modified to include MemOut option
-    assign MuxCOut = (MuxCSel == 2'b00) ? ALUOut[7:0] :           // Select lower 8 bits of ALUOut for Mux C
-                    (MuxCSel == 2'b01) ? ALUOut[15:8] :           // Select middle 8 bits of ALUOut for Mux C  
-                    (MuxCSel == 2'b10) ? ALUOut[23:16] :          // Select upper middle 8 bits of ALUOut for Mux C
-                    (Mem_WR) ? ALUOut[31:24] :                    // Select upper 8 bits of ALUOut when writing to memory
-                    MemOut;                                       // Select MemOut when reading from memory
+    // MuxC implementation - Route OutC for CALL operations, ALU for others
+    assign MuxCOut = CallMode ? ((MuxCSel == 2'b01) ? OutC[7:0] : OutC[15:8]) : // CALL: route OutC based on MuxCSel
+                    (MuxCSel == 2'b00) ? ALUOut[7:0] :           // ALU[7:0] - LSB for most operations
+                    (MuxCSel == 2'b01) ? ALUOut[15:8] :           // ALU[15:8] - second byte for STAR
+                    (MuxCSel == 2'b10) ? ALUOut[23:16] :          // ALU[23:16] - third byte for STAR
+                    (MuxCSel == 2'b11) ? (Mem_WR ? ALUOut[31:24] : MemOut) : // ALU[31:24] for writes, MemOut for reads
+                    ALUOut[7:0];                                  // Default to ALU[7:0]
 
 endmodule
