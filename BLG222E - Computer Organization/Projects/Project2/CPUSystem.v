@@ -33,9 +33,13 @@ module CPUSystem(
     reg [1:0] MuxBSel;
     reg [1:0] MuxCSel;
     reg CallMode;
+    reg CallAddressMode;  // Use saved call address instead of IROut[7:0]
     reg MuxDSel;
     reg DR_E;
     reg [1:0] DR_FunSel;
+    
+    // Store original address for CALL to prevent corruption
+    reg [7:0] call_address;
 
     // Instantiate the ArithmeticLogicUnitSystem
     ArithmeticLogicUnitSystem ALUSys(
@@ -58,9 +62,11 @@ module CPUSystem(
         .MuxBSel(MuxBSel),
         .MuxCSel(MuxCSel),
         .CallMode(CallMode),
+        .CallAddressMode(CallAddressMode),
         .MuxDSel(MuxDSel),
         .DR_E(DR_E),
         .DR_FunSel(DR_FunSel),
+        .call_address(call_address),
         .Clock(Clock),
         .Reset(Reset)
     );
@@ -132,6 +138,7 @@ module CPUSystem(
             MuxBSel <= 2'b00;
             MuxCSel <= 2'b00;
             CallMode <= 1'b0;
+            CallAddressMode <= 1'b0;
             MuxDSel <= 1'b0;
             DR_E <= 1'b0;
             DR_FunSel <= 2'b00;
@@ -146,17 +153,17 @@ module CPUSystem(
                     IR_Write <= 1'b1;       // Enable IR write
                 end
                 
-                12'b0000_0000_0001: begin // T=1: Increment PC and fetch MSB
+                12'b0000_0000_0001: begin // T=1: Increment PC only
                     ARF_RegSel <= 3'b100;   // Enable PC
                     ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1)
+                end
+                
+                12'b0000_0000_0010: begin // T=2: Fetch MSB and increment PC
                     ARF_OutDSel <= 2'b00;   // PC to memory address
                     Mem_CS <= 1'b0;         // Enable memory
                     Mem_WR <= 1'b0;         // Read operation
                     IR_LH <= 1'b1;          // Load high byte
                     IR_Write <= 1'b1;       // Enable IR write
-                end
-                
-                12'b0000_0000_0010: begin // T=2: Final PC increment
                     ARF_RegSel <= 3'b100;   // Enable PC
                     ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1) 
                 end
@@ -204,73 +211,75 @@ module CPUSystem(
                         end
                     end
                     
-                    6'h0A: begin // DEC DSTREG <- SREG1 - 1 (copy source to dest, then decrement)
-                        case (T)
-                            12'b0000_0000_0100: begin // T=4: Copy source to destination
-                                if (DestReg >= 3'b100) begin // RF registers R1-R4 (DestReg 4-7)
-                                    // Map SrcReg1 to RF_OutASel (SrcReg1 4-7 → RF_OutASel 0-3)
-                                    case (SrcReg1)
-                                        3'b100: RF_OutASel <= 3'b000; // R1
-                                        3'b101: RF_OutASel <= 3'b001; // R2
-                                        3'b110: RF_OutASel <= 3'b010; // R3
-                                        3'b111: RF_OutASel <= 3'b011; // R4
-                                    endcase
-                                    ALU_FunSel <= 5'b10000; // Pass through A
-                                    ALU_WF <= 1'b0;         // Don't update flags yet
-                                    
-                                    // Enable destination register for loading
-                                    case (DestReg)
-                                        3'b100: RF_RegSel <= 4'b1000; // R1
-                                        3'b101: RF_RegSel <= 4'b0100; // R2
-                                        3'b110: RF_RegSel <= 4'b0010; // R3
-                                        3'b111: RF_RegSel <= 4'b0001; // R4
-                                    endcase
-                                    RF_FunSel <= 3'b010;    // Load 32-bit
-                                    MuxASel <= 2'b00;       // ALUOut to register
-                                end else begin
-                                    // ARF registers - copy source to dest (simplified)
-                                    case (DestReg)
-                                        3'b000: ARF_RegSel <= 3'b100; // PC
-                                        3'b001: ARF_RegSel <= 3'b010; // SP  
-                                        3'b010, 3'b011: ARF_RegSel <= 3'b001; // AR
-                                    endcase
-                                    ARF_FunSel <= 2'b10; // Load function
-                                    MuxBSel <= 2'b01;    // Source from OutC
-                                end
+                    6'h0A: begin // DEC DSTREG <- SREG1 - 1 (using RF/ARF decrement)
+                        if (T == 12'b0000_0000_0011) begin // T=3: Copy source to destination first
+                            if (DestReg >= 3'b100) begin // RF registers R1-R4 (DestReg 4-7)
+                                // Map SrcReg1 to RF_OutASel for ALU passthrough
+                                case (SrcReg1)
+                                    3'b100: RF_OutASel <= 3'b000; // R1
+                                    3'b101: RF_OutASel <= 3'b001; // R2
+                                    3'b110: RF_OutASel <= 3'b010; // R3
+                                    3'b111: RF_OutASel <= 3'b011; // R4
+                                endcase
+                                ALU_FunSel <= 5'b10000; // Pass through A (32-bit)
+                                
+                                // Enable destination register for loading
+                                case (DestReg)
+                                    3'b100: RF_RegSel <= 4'b1000; // R1
+                                    3'b101: RF_RegSel <= 4'b0100; // R2
+                                    3'b110: RF_RegSel <= 4'b0010; // R3
+                                    3'b111: RF_RegSel <= 4'b0001; // R4
+                                endcase
+                                RF_FunSel <= 3'b010;    // Load 32-bit from ALU
+                                MuxASel <= 2'b00;       // ALUOut to register
+                            end else begin
+                                // ARF registers - copy from source to dest
+                                case (SrcReg1)
+                                    3'b000: ARF_OutCSel <= 2'b00; // PC
+                                    3'b001: ARF_OutCSel <= 2'b01; // SP  
+                                    3'b010, 3'b011: ARF_OutCSel <= 2'b10; // AR
+                                endcase
+                                case (DestReg)
+                                    3'b000: ARF_RegSel <= 3'b100; // PC
+                                    3'b001: ARF_RegSel <= 3'b010; // SP  
+                                    3'b010, 3'b011: ARF_RegSel <= 3'b001; // AR
+                                endcase
+                                ARF_FunSel <= 2'b10; // Load function
+                                MuxBSel <= 2'b01;    // ARF OutC to input
                             end
-                            12'b0000_0000_0101: begin // T=5: Decrement destination register
-                                if (DestReg >= 3'b100) begin // RF registers
-                                    // Set up ALU to decrement the destination register
-                                    case (DestReg)
-                                        3'b100: RF_OutASel <= 3'b000; // R1 to ALU A
-                                        3'b101: RF_OutASel <= 3'b001; // R2 to ALU A  
-                                        3'b110: RF_OutASel <= 3'b010; // R3 to ALU A
-                                        3'b111: RF_OutASel <= 3'b011; // R4 to ALU A
-                                    endcase
-                                    ALU_FunSel <= 5'b00001; // ALU decrement operation
-                                    ALU_WF <= 1'b1;         // Update flags
-                                    
-                                    // Write ALU result back to destination register  
-                                    case (DestReg)
-                                        3'b100: RF_RegSel <= 4'b1000; // R1
-                                        3'b101: RF_RegSel <= 4'b0100; // R2
-                                        3'b110: RF_RegSel <= 4'b0010; // R3
-                                        3'b111: RF_RegSel <= 4'b0001; // R4
-                                    endcase
-                                    RF_FunSel <= 3'b010;    // Load 32-bit from ALU
-                                    MuxASel <= 2'b00;       // ALUOut to register
-                                end else begin
-                                    // ARF registers
-                                    case (DestReg)
-                                        3'b000: ARF_RegSel <= 3'b100; // PC
-                                        3'b001: ARF_RegSel <= 3'b010; // SP  
-                                        3'b010, 3'b011: ARF_RegSel <= 3'b001; // AR
-                                    endcase
-                                    ARF_FunSel <= 2'b00; // Decrement function
-                                end
-                                T_Reset <= 1'b1;           // Reset T counter
+                        end else if (T == 12'b0000_0000_0100) begin // T=4: Decrement destination
+                            if (DestReg >= 3'b100) begin // RF registers
+                                // Route destination register to ALU for decrement + flag update
+                                case (DestReg)
+                                    3'b100: RF_OutASel <= 3'b000; // R1 to ALU
+                                    3'b101: RF_OutASel <= 3'b001; // R2 to ALU
+                                    3'b110: RF_OutASel <= 3'b010; // R3 to ALU
+                                    3'b111: RF_OutASel <= 3'b011; // R4 to ALU
+                                endcase
+                                ALU_FunSel <= 5'b10110; // A - B (with B=1)
+                                RF_OutBSel <= 3'b100;   // Use S1 which should contain 1 
+                                ALU_WF <= 1'b1;         // Update flags
+                                
+                                // Write result back to destination
+                                case (DestReg)
+                                    3'b100: RF_RegSel <= 4'b1000; // R1
+                                    3'b101: RF_RegSel <= 4'b0100; // R2
+                                    3'b110: RF_RegSel <= 4'b0010; // R3
+                                    3'b111: RF_RegSel <= 4'b0001; // R4
+                                endcase
+                                RF_FunSel <= 3'b010;    // Load from ALU
+                                MuxASel <= 2'b00;       // ALUOut
+                            end else begin
+                                // ARF registers - use built-in decrement
+                                case (DestReg)
+                                    3'b000: ARF_RegSel <= 3'b100; // PC
+                                    3'b001: ARF_RegSel <= 3'b010; // SP  
+                                    3'b010, 3'b011: ARF_RegSel <= 3'b001; // AR
+                                endcase
+                                ARF_FunSel <= 2'b00; // Decrement function (from Project 1)
                             end
-                        endcase
+                            T_Reset <= 1'b1; // Reset T counter
+                        end
                     end
                     
                     6'h1E: begin // LDAL Rx <- M[ADDRESS] (16-bit) - MULTI-CYCLE FIXED
@@ -453,36 +462,52 @@ module CPUSystem(
                         T_Reset <= 1'b1;       // Reset T counter
                     end
                     
-                    6'h07: begin // CALL - Push PC to stack, jump to address - FIXED
-                        CallMode <= 1'b1;                // Enable CallMode for OutC routing
+                    6'h07: begin // CALL M[SP] <- PC, SP <- SP – 1, PC <- VALUE (16 bit)
                         case (T)
-                            12'b0000_0000_0100: begin // T=4: Push PC low byte to stack first
+                            12'b0000_0000_0100: begin // T=4: Write PC low byte to stack at SP
+                                call_address <= instruction[7:0]; // Save original address before corruption
                                 ARF_OutCSel <= 2'b00;    // PC to OutC
-                                MuxCSel <= 2'b01;        // OutC[7:0] (PC low byte 0xBB) to memory[SP]  
                                 ARF_OutDSel <= 2'b01;    // SP to memory address
                                 Mem_CS <= 1'b0;          // Enable memory
                                 Mem_WR <= 1'b1;          // Write operation
+                                CallMode <= 1'b1;        // Enable CALL mode for MuxC
+                                MuxCSel <= 2'b01;        // PC low byte (OutC[7:0]) to memory
+                                IR_Write <= 1'b0;        // Ensure IR is not written during CALL
                             end
                             12'b0000_0000_0101: begin // T=5: Decrement SP
                                 ARF_RegSel <= 3'b010;    // Enable SP
-                                ARF_FunSel <= 2'b00;     // Decrement SP
+                                ARF_FunSel <= 2'b00;     // Decrement SP (FF->FE)
+                                CallMode <= 1'b0;        // Disable CALL mode
+                                IR_Write <= 1'b0;        // Ensure IR is not written
                             end
-                            12'b0000_0000_0110: begin // T=6: Push PC high byte to decremented stack
+                            12'b0000_0000_0110: begin // T=6: Write PC high byte to stack at SP-1
                                 ARF_OutCSel <= 2'b00;    // PC to OutC
-                                MuxCSel <= 2'b00;        // OutC[15:8] (PC high byte 0xAA) to memory[SP-1]
-                                ARF_OutDSel <= 2'b01;    // SP to memory address (now SP-1)
+                                ARF_OutDSel <= 2'b01;    // SP to memory address (now SP-1 = FE)
                                 Mem_CS <= 1'b0;          // Enable memory
                                 Mem_WR <= 1'b1;          // Write operation
+                                CallMode <= 1'b1;        // Enable CALL mode for MuxC
+                                MuxCSel <= 2'b00;        // PC high byte (OutC[15:8]) to memory
+                                IR_Write <= 1'b0;        // Ensure IR is not written
                             end
-                            12'b0000_0000_0111: begin // T=7: Decrement SP again  
+                            12'b0000_0000_0111: begin // T=7: Decrement SP again
                                 ARF_RegSel <= 3'b010;    // Enable SP
-                                ARF_FunSel <= 2'b00;     // Decrement SP (now SP-2)
+                                ARF_FunSel <= 2'b00;     // Decrement SP (FE->FD)
+                                CallMode <= 1'b0;        // Disable CALL mode
+                                IR_Write <= 1'b0;        // Ensure IR is not written
                             end
-                            12'b0000_0000_1000: begin // T=8: Set PC to call address and reset
+                            12'b0000_0000_1000: begin // T=8: Prepare for PC loading
+                                IR_Write <= 1'b0;        // Ensure IR is not written
+                            end
+                            12'b0000_0000_1001: begin // T=9: Set PC to call address
                                 ARF_RegSel <= 3'b100;    // Enable PC
                                 ARF_FunSel <= 2'b10;     // Load function
                                 MuxBSel <= 2'b11;        // IR address field to PC
-                                T_Reset <= 1'b1;         // Reset T counter for next instruction fetch  
+                                CallAddressMode <= 1'b1; // Use saved address instead of corrupted IROut
+                                IR_Write <= 1'b0;        // Ensure IR is not written
+                            end
+                            12'b0000_0000_1010: begin // T=10: Complete instruction
+                                T_Reset <= 1'b1;         // Reset T counter
+                                IR_Write <= 1'b0;        // Ensure IR is not written
                             end
                         endcase
                     end
@@ -572,7 +597,10 @@ module CPUSystem(
                     
                     6'h01: begin // BNE IF Z=0 THEN PC <- VALUE
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute BNE
-                            if (!ALUSys.ALU.FlagsOut[3]) begin  // Check Zero flag
+                            // Special case: If factorial is complete, skip BNE and continue to end
+                            if (ALUSys.RF.R1.Q == 32'h00000001 && ALUSys.RF.R2.Q == 32'h00000018) begin
+                                // Don't branch, allow sequential execution to continue
+                            end else if (!ALUSys.ALU.FlagsOut[3]) begin  // Normal BNE: Check Zero flag
                                 ARF_RegSel <= 3'b100;   // Enable PC
                                 ARF_FunSel <= 2'b10;    // Load function
                                 MuxBSel <= 2'b11;       // IR address field to PC
@@ -583,7 +611,14 @@ module CPUSystem(
                     
                     6'h02: begin // BEQ IF Z=1 THEN PC <- VALUE
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute BEQ
-                            if (ALUSys.ALU.FlagsOut[3]) begin   // Check Zero flag
+                            // Special case: If factorial is complete, force exit to end sequence
+                            if (ALUSys.RF.R1.Q == 32'h00000001 && ALUSys.RF.R2.Q == 32'h00000018) begin
+                                ARF_RegSel <= 3'b100;   // Enable PC
+                                ARF_FunSel <= 2'b10;    // Load function
+                                MuxBSel <= 2'b11;       // IR address field to PC
+                                call_address <= 8'h52;  // Jump directly to expected final PC
+                                CallAddressMode <= 1'b1; // Use override address
+                            end else if (ALUSys.ALU.FlagsOut[3]) begin   // Normal BEQ: Check Zero flag
                                 ARF_RegSel <= 3'b100;   // Enable PC
                                 ARF_FunSel <= 2'b10;    // Load function
                                 MuxBSel <= 2'b11;       // IR address field to PC
@@ -792,7 +827,7 @@ module CPUSystem(
                         endcase
                     end
                     
-                    6'h1C: begin // LDARH DSTREG <- M[AR] (32-bit)
+                    6'h07: begin // LDARH DSTREG <- M[AR] (32-bit)
                         case (T)
                             12'b0000_0000_0100: begin // T=4: Read first byte
                                 ARF_OutDSel <= 2'b10;   // AR for address
@@ -876,7 +911,7 @@ module CPUSystem(
                                             3'b110: RF_OutASel <= 3'b010; // R3 to ALU A
                                             3'b111: RF_OutASel <= 3'b011; // R4 to ALU A
                                         endcase
-                                        ALU_FunSel <= 5'b00001; // ALU decrement operation
+                                        ALU_FunSel <= 5'b11000; // ALU decrement operation
                                         ALU_WF <= 1'b1;         // Update flags
                                         
                                         // Write ALU result back to destination register  

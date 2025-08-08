@@ -25,9 +25,11 @@ module ArithmeticLogicUnitSystem(
     input [1:0] MuxBSel,            // Selector for Mux B
     input [1:0] MuxCSel,            // Selector for Mux C
     input CallMode,                 // Signal to indicate CALL operation for OutC routing
+    input CallAddressMode,          // Use saved call address instead of IROut[7:0]
     input MuxDSel,                  // Selector for Mux D
     input DR_E,                     // Enable signal for Data Register
     input [1:0] DR_FunSel,          // Function select for Data Register
+    input [7:0] call_address,       // Saved call address for CALL instruction
 
     input Clock,                    // Clock signal for synchronous operations
     input Reset                     // Reset signal
@@ -135,6 +137,7 @@ module ArithmeticLogicUnitSystem(
     assign MuxBOut = (MuxBSel == 2'b00) ? ALUOut :                // 00: ALUOut
                     (MuxBSel == 2'b01) ? {{16{1'b0}}, OutC} :     // 01: ARF OutC
                     (MuxBSel == 2'b10) ? DROut :                  // 10: DROut
+                    CallAddressMode ? {{24{1'b0}}, call_address} : // Use saved address for CALL
                     {{24{1'b0}}, IROut[7:0]};                     // 11: IROut (7:0)
 
     // MuxC implementation - Route OutC for CALL operations, ALU for others

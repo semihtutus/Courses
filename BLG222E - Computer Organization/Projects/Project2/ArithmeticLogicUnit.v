@@ -27,12 +27,12 @@ module ArithmeticLogicUnit(
                 N = ALUOut[15];
             end
 
-            5'b00001: begin // 16-bit B
+            5'b00001: begin // 16-bit B (restored)
                 ALUOut = {16'b0, B[15:0]};
                 Z = (ALUOut[15:0] == 0);
                 N = ALUOut[15];
             end
-
+            
             5'b00010: begin // 16-bit NOT A
                 ALUOut = {16'b0, ~A[15:0]};
                 Z = (ALUOut[15:0] == 0);
