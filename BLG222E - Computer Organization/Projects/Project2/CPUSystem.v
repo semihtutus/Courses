@@ -40,6 +40,9 @@ module CPUSystem(
     
     // Store original address for CALL to prevent corruption
     reg [7:0] call_address;
+    
+    // Flag to skip PC increment after jump/branch instructions
+    reg pc_modified;
 
     // Instantiate the ArithmeticLogicUnitSystem
     ArithmeticLogicUnitSystem ALUSys(
@@ -109,6 +112,7 @@ module CPUSystem(
             MuxDSel <= 1'b0;
             DR_E <= 1'b0;
             DR_FunSel <= 2'b00;
+            pc_modified <= 1'b0;
         end else begin
             // Handle external T_Reset signal from simulation
             if (T_Reset) begin
@@ -142,7 +146,6 @@ module CPUSystem(
             MuxDSel <= 1'b0;
             DR_E <= 1'b0;
             DR_FunSel <= 2'b00;
-
             // Optimized instruction fetch and execution
             case (T)
                 12'b0000_0000_0000: begin // T=0: Fetch LSB
@@ -153,23 +156,32 @@ module CPUSystem(
                     IR_Write <= 1'b1;       // Enable IR write
                 end
                 
-                12'b0000_0000_0001: begin // T=1: Increment PC only
-                    ARF_RegSel <= 3'b100;   // Enable PC
-                    ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1)
+                12'b0000_0000_0001: begin // T=1: Increment PC only (if not modified by jump/branch)
+                    if (!pc_modified) begin
+                        ARF_RegSel <= 3'b100;   // Enable PC
+                        ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1)
+                    end else begin
+                        pc_modified <= 1'b0;    // Reset flag after skipping increment
+                    end
                 end
                 
-                12'b0000_0000_0010: begin // T=2: Fetch MSB and increment PC
+                12'b0000_0000_0010: begin // T=2: Fetch MSB and increment PC (if not modified by jump/branch)
                     ARF_OutDSel <= 2'b00;   // PC to memory address
                     Mem_CS <= 1'b0;         // Enable memory
                     Mem_WR <= 1'b0;         // Read operation
                     IR_LH <= 1'b1;          // Load high byte
                     IR_Write <= 1'b1;       // Enable IR write
-                    ARF_RegSel <= 3'b100;   // Enable PC
-                    ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1) 
+                    if (!pc_modified) begin
+                        ARF_RegSel <= 3'b100;   // Enable PC
+                        ARF_FunSel <= 2'b01;    // Increment PC (PC = PC + 1)
+                    end else begin
+                        pc_modified <= 1'b0;    // Reset flag after skipping second increment
+                    end
                 end
                 
                 default: begin 
                     // T>=3: Execute instruction based on opcode
+                    IR_Write <= 1'b0;              // Prevent IR corruption during execution
                     case (Opcode)
                         6'h19: begin // MOVL Rx[7:0] <- IMMEDIATE
                             if (T == 12'b0000_0000_0100) begin // T=4: Execute MOVL
@@ -181,6 +193,7 @@ module CPUSystem(
                                 endcase
                                 RF_FunSel <= 3'b100;   // Load lower 8 bits, clear upper 24
                                 MuxASel <= 2'b11;      // IR address field
+                                IR_Write <= 1'b0;      // Prevent IR corruption
                                 T_Reset <= 1'b1;       // Reset for next instruction
                             end
                         end
@@ -190,23 +203,24 @@ module CPUSystem(
                             case (RegSel)
                                 2'b00: begin
                                     RF_RegSel <= 4'b1000; // R1
-                                    RF_OutASel <= 3'b100; // R1 current value
+                                    RF_OutASel <= 3'b000; // R1 current value
                                 end
                                 2'b01: begin
                                     RF_RegSel <= 4'b0100; // R2
-                                    RF_OutASel <= 3'b101; // R2 current value
+                                    RF_OutASel <= 3'b001; // R2 current value
                                 end
                                 2'b10: begin
                                     RF_RegSel <= 4'b0010; // R3
-                                    RF_OutASel <= 3'b110; // R3 current value
+                                    RF_OutASel <= 3'b010; // R3 current value
                                 end
                                 2'b11: begin
                                     RF_RegSel <= 4'b0001; // R4
-                                    RF_OutASel <= 3'b111; // R4 current value
+                                    RF_OutASel <= 3'b011; // R4 current value
                                 end
                             endcase
                             RF_FunSel <= 3'b110;   // Shift left 8 bits and load immediate
                             MuxASel <= 2'b11;      // IR address field
+                            IR_Write <= 1'b0;      // Prevent IR corruption
                             T_Reset <= 1'b1;       // Reset T counter
                         end
                     end
@@ -452,10 +466,10 @@ module CPUSystem(
                         
                         // Get source register data
                         case (RegSel)
-                            2'b00: RF_OutASel <= 3'b100; // R1
-                            2'b01: RF_OutASel <= 3'b101; // R2
-                            2'b10: RF_OutASel <= 3'b110; // R3
-                            2'b11: RF_OutASel <= 3'b111; // R4
+                            2'b00: RF_OutASel <= 3'b000; // R1
+                            2'b01: RF_OutASel <= 3'b001; // R2
+                            2'b10: RF_OutASel <= 3'b010; // R3
+                            2'b11: RF_OutASel <= 3'b011; // R4
                         endcase
                         ALU_FunSel <= 5'b10000; // Pass through A
                         MuxCSel <= 2'b00;      // ALU output to memory
@@ -503,6 +517,7 @@ module CPUSystem(
                                 ARF_FunSel <= 2'b10;     // Load function
                                 MuxBSel <= 2'b11;        // IR address field to PC
                                 CallAddressMode <= 1'b1; // Use saved address instead of corrupted IROut
+                                pc_modified <= 1'b1;     // Mark PC as modified to skip auto-increment
                                 IR_Write <= 1'b0;        // Ensure IR is not written
                             end
                             12'b0000_0000_1010: begin // T=10: Complete instruction
@@ -540,6 +555,7 @@ module CPUSystem(
                                 ARF_RegSel <= 3'b100;  // Enable PC
                                 ARF_FunSel <= 2'b10;   // Load function
                                 MuxBSel <= 2'b10;      // DROut to PC
+                                pc_modified <= 1'b1;   // Mark PC as modified to skip auto-increment
                                 T_Reset <= 1'b1;       // Reset T counter
                             end
                         endcase
@@ -591,19 +607,18 @@ module CPUSystem(
                             ARF_RegSel <= 3'b100;   // Enable PC
                             ARF_FunSel <= 2'b10;    // Load function
                             MuxBSel <= 2'b11;       // IR address field to PC
+                            pc_modified <= 1'b1;    // Mark PC as modified to skip auto-increment
                             T_Reset <= 1'b1;        // Reset T counter for next instruction fetch
                         end
                     end
                     
                     6'h01: begin // BNE IF Z=0 THEN PC <- VALUE
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute BNE
-                            // Special case: If factorial is complete, skip BNE and continue to end
-                            if (ALUSys.RF.R1.Q == 32'h00000001 && ALUSys.RF.R2.Q == 32'h00000018) begin
-                                // Don't branch, allow sequential execution to continue
-                            end else if (!ALUSys.ALU.FlagsOut[3]) begin  // Normal BNE: Check Zero flag
+                            if (!ALUSys.ALU.FlagsOut[3]) begin  // BNE: Check Zero flag
                                 ARF_RegSel <= 3'b100;   // Enable PC
                                 ARF_FunSel <= 2'b10;    // Load function
                                 MuxBSel <= 2'b11;       // IR address field to PC
+                                pc_modified <= 1'b1;    // Mark PC as modified to skip auto-increment
                             end
                             T_Reset <= 1'b1;        // Reset T counter for next instruction fetch
                         end
@@ -611,17 +626,11 @@ module CPUSystem(
                     
                     6'h02: begin // BEQ IF Z=1 THEN PC <- VALUE
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute BEQ
-                            // Special case: If factorial is complete, force exit to end sequence
-                            if (ALUSys.RF.R1.Q == 32'h00000001 && ALUSys.RF.R2.Q == 32'h00000018) begin
+                            if (ALUSys.ALU.FlagsOut[3]) begin   // BEQ: Check Zero flag
                                 ARF_RegSel <= 3'b100;   // Enable PC
                                 ARF_FunSel <= 2'b10;    // Load function
                                 MuxBSel <= 2'b11;       // IR address field to PC
-                                call_address <= 8'h52;  // Jump directly to expected final PC
-                                CallAddressMode <= 1'b1; // Use override address
-                            end else if (ALUSys.ALU.FlagsOut[3]) begin   // Normal BEQ: Check Zero flag
-                                ARF_RegSel <= 3'b100;   // Enable PC
-                                ARF_FunSel <= 2'b10;    // Load function
-                                MuxBSel <= 2'b11;       // IR address field to PC
+                                pc_modified <= 1'b1;    // Mark PC as modified to skip auto-increment
                             end
                             T_Reset <= 1'b1;        // Reset T counter for next instruction fetch
                         end
@@ -657,7 +666,14 @@ module CPUSystem(
                     
                     6'h18: begin // MOV DSTREG <- SREG1
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute MOV
-                            RF_OutASel <= SrcReg1;   // Source register
+                            // Map SrcReg1 to RF_OutASel (convert 4-7 range to 0-3 range)
+                            case (SrcReg1)
+                                3'b100: RF_OutASel <= 3'b000; // R1
+                                3'b101: RF_OutASel <= 3'b001; // R2
+                                3'b110: RF_OutASel <= 3'b010; // R3
+                                3'b111: RF_OutASel <= 3'b011; // R4
+                                default: RF_OutASel <= 3'b000; // Default to R1
+                            endcase
                             ALU_FunSel <= 5'b10000;  // Pass through
                             ALU_WF <= 1'b1;         // Update flags
                             
@@ -676,8 +692,22 @@ module CPUSystem(
                     
                     6'h15: begin // ADD DSTREG <- SREG1 + SREG2
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute ADD
-                            RF_OutASel <= SrcReg1;   // First operand
-                            RF_OutBSel <= SrcReg2;   // Second operand
+                            // Map SrcReg1 to RF_OutASel
+                            case (SrcReg1)
+                                3'b100: RF_OutASel <= 3'b000; // R1
+                                3'b101: RF_OutASel <= 3'b001; // R2
+                                3'b110: RF_OutASel <= 3'b010; // R3
+                                3'b111: RF_OutASel <= 3'b011; // R4
+                                default: RF_OutASel <= 3'b000;
+                            endcase
+                            // Map SrcReg2 to RF_OutBSel
+                            case (SrcReg2)
+                                3'b100: RF_OutBSel <= 3'b000; // R1
+                                3'b101: RF_OutBSel <= 3'b001; // R2
+                                3'b110: RF_OutBSel <= 3'b010; // R3
+                                3'b111: RF_OutBSel <= 3'b011; // R4
+                                default: RF_OutBSel <= 3'b000;
+                            endcase
                             ALU_FunSel <= 5'b10100;  // ADD operation (A + B)
                             ALU_WF <= 1'b1;         // Update flags
                             
@@ -696,8 +726,22 @@ module CPUSystem(
                     
                     6'h17: begin // SUB DSTREG <- SREG1 - SREG2 (FIXED OPCODE)
                         if (T == 12'b0000_0000_0100) begin // T=4: Execute SUB
-                            RF_OutASel <= SrcReg1;   // First operand
-                            RF_OutBSel <= SrcReg2;   // Second operand
+                            // Map SrcReg1 to RF_OutASel
+                            case (SrcReg1)
+                                3'b100: RF_OutASel <= 3'b000; // R1
+                                3'b101: RF_OutASel <= 3'b001; // R2
+                                3'b110: RF_OutASel <= 3'b010; // R3
+                                3'b111: RF_OutASel <= 3'b011; // R4
+                                default: RF_OutASel <= 3'b000;
+                            endcase
+                            // Map SrcReg2 to RF_OutBSel
+                            case (SrcReg2)
+                                3'b100: RF_OutBSel <= 3'b000; // R1
+                                3'b101: RF_OutBSel <= 3'b001; // R2
+                                3'b110: RF_OutBSel <= 3'b010; // R3
+                                3'b111: RF_OutBSel <= 3'b011; // R4
+                                default: RF_OutBSel <= 3'b000;
+                            endcase
                             ALU_FunSel <= 5'b10110;  // SUB operation (A - B)
                             ALU_WF <= 1'b1;         // Update flags
                             
